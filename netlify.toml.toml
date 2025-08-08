@@ -1,0 +1,10 @@
+# File di configurazione per Netlify
+
+[build]
+  # Specifica la cartella che contiene le funzioni serverless.
+  functions = "netlify/functions/"
+
+[functions]
+  # Imposta il runtime per le funzioni.
+  # Assicurati che la versione sia compatibile con le tue dipendenze.
+  node_version = "18"

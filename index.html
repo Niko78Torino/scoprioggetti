@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="google-adsense-account" content="ca-pub-8268426852108056">
+    <title>E tu, lo sapevi? - Analizzatore di Oggetti</title>
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8268426852108056"
+     crossorigin="anonymous"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        .main-content {
+            flex-grow: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .drop-zone {
+            border: 2px dashed #5eead4;
+            transition: background-color 0.2s ease-in-out, border-color 0.2s ease-in-out;
+        }
+        .drop-zone.drag-over {
+            background-color: #ccfbf1;
+            border-color: #14b8a6;
+        }
+        .loader {
+            border: 4px solid #f0fdfa;
+            border-top: 4px solid #0d9488;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        summary::-webkit-details-marker { display: none; }
+        summary { list-style: none; }
+        /* Stile per il selettore di lingua attivo */
+        .lang-btn.active {
+            font-weight: 700;
+            color: #0d9488; /* teal-600 */
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body class="bg-teal-50 text-gray-800">
+
+    <div class="main-content w-full p-4">
+        <div class="w-full max-w-2xl bg-white/80 backdrop-blur-sm rounded-xl shadow-lg p-6 md:p-8 border border-teal-200 relative">
+            
+            <!-- Selettore Lingua -->
+            <div class="absolute top-4 right-6 flex space-x-3">
+                <button id="lang-it" class="lang-btn text-sm">IT</button>
+                <span class="text-gray-300">|</span>
+                <button id="lang-en" class="lang-btn text-sm text-gray-500 hover:text-teal-600">EN</button>
+            </div>
+
+            <div class="text-center mb-6 pt-8">
+                <h1 class="text-3xl md:text-4xl font-bold text-teal-900" data-translate-key="mainTitle">E tu, lo sapevi?</h1>
+                <p class="text-teal-700 mt-2 max-w-md mx-auto" data-translate-key="subtitle">Questa applicazione analizza qualsiasi oggetto in un'immagine e ti fornisce dettagli e curiosità.</p>
+            </div>
+
+            <!-- Zona di Caricamento File -->
+            <div id="dropZone" class="drop-zone rounded-lg p-8 text-center cursor-pointer mb-6 bg-teal-50/50">
+                <input type="file" id="fileInput" class="hidden" accept="image/*">
+                <div id="uploadPrompt">
+                    <svg class="mx-auto h-12 w-12 text-teal-400" stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true"><path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" /></svg>
+                    <p class="mt-2 text-sm text-teal-800">
+                        <span class="font-semibold text-teal-600" data-translate-key="uploadClick">Clicca per caricare</span> <span data-translate-key="uploadDrag">o trascina un'immagine</span>
+                    </p>
+                    <p class="text-xs text-teal-600 mt-1" data-translate-key="uploadFormats">PNG, JPG, GIF fino a 10MB</p>
+                </div>
+                <div id="imagePreviewContainer" class="hidden relative">
+                    <img id="imagePreview" src="#" alt="Anteprima immagine" class="max-h-64 mx-auto rounded-lg shadow-md"/>
+                    <button id="removeImageBtn" class="absolute top-2 right-2 bg-white/70 backdrop-blur-sm rounded-full p-1 text-gray-700 hover:bg-white focus:outline-none"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" /></svg></button>
+                </div>
+            </div>
+            
+            <!-- Personalizzazione Analisi -->
+            <div id="personalizationContainer" class="mb-6 p-4 bg-teal-50/60 rounded-lg border border-teal-200">
+                <h3 class="font-semibold text-center text-teal-800 mb-3" data-translate-key="personalizeTitle">Personalizza Analisi (Opzionale)</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label for="toneSelect" class="block text-sm font-medium text-teal-700 mb-1" data-translate-key="toneLabel">Scegli un tono:</label>
+                        <select id="toneSelect" class="w-full bg-white border border-teal-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-teal-500 focus:border-teal-500 text-sm">
+                            <option value="Normale" data-translate-key="toneNormal">Normale</option>
+                            <option value="Tecnico" data-translate-key="toneTechnical">Tecnico</option>
+                            <option value="Divertente" data-translate-key="toneFunny">Divertente</option>
+                            <option value="Storico" data-translate-key="toneHistorical">Storico</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="questionInput" class="block text-sm font-medium text-teal-700 mb-1" data-translate-key="questionLabel">Fai una domanda specifica:</label>
+                        <input type="text" id="questionInput" data-translate-key="questionPlaceholder" placeholder="Es: Di che materiale è fatto?" class="w-full bg-white border border-teal-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-teal-500 focus:border-teal-500 text-sm">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bottoni di Azione -->
+            <div class="text-center mb-6">
+                <button id="analyzeButton" class="w-full sm:w-auto bg-teal-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-teal-700 focus:outline-none focus:ring-4 focus:ring-teal-300 transition-all duration-200 disabled:bg-teal-300 disabled:cursor-not-allowed" data-translate-key="analyzeButton">Analizza Oggetto</button>
+                <button id="resetButton" class="hidden w-full sm:w-auto bg-gray-500 text-white font-bold py-3 px-8 rounded-lg hover:bg-gray-600 focus:outline-none focus:ring-4 focus:ring-gray-300 transition-all duration-200" data-translate-key="resetButton">Analizza un Altro Oggetto</button>
+            </div>
+
+            <!-- Risultati -->
+            <div id="resultContainer" class="bg-white/60 rounded-lg p-6 min-h-[100px] border border-teal-200">
+                <div id="loader" class="hidden mx-auto loader"></div>
+                <p id="resultText" class="text-teal-900 whitespace-pre-wrap"></p>
+                <div id="socialShareContainer" class="hidden mt-4 pt-4 border-t border-teal-200">
+                    <p class="text-center text-sm font-semibold text-teal-800 mb-3" data-translate-key="shareTitle">Condividi il risultato:</p>
+                    <div class="flex justify-center items-center space-x-4">
+                        <button id="shareFacebook" class="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"><svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M22 12c0-5.52-4.48-10-10-10S2 6.48 2 12c0 4.84 3.44 8.87 8 9.8V15H8v-3h2V9.5C10 7.57 11.57 6 13.5 6H16v3h-1.5c-1 0-1.5.5-1.5 1.5V12h3l-.5 3h-2.5v6.8c4.56-.93 8-4.96 8-9.8z"/></svg><span>Facebook</span></button>
+                        <button id="shareTwitter" class="flex items-center space-x-2 bg-black text-white px-4 py-2 rounded-lg hover:bg-gray-800 transition-colors"><svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg><span>X</span></button>
+                        <button id="shareWhatsapp" class="flex items-center space-x-2 bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors"><svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12.04 2c-5.46 0-9.9 4.44-9.9 9.9 0 1.75.46 3.38 1.25 4.85L2 22l5.3-1.38c1.41.74 3 .12 4.74.12h.01c5.46 0 9.9-4.44 9.9-9.9s-4.44-9.9-9.9-9.9zM17 14.4c-.28-.14-1.65-.82-1.9-.91-.25-.09-.44-.14-.62.14-.18.28-.72.91-.88 1.1-.16.18-.32.2-.6.07-.28-.14-1.18-.43-2.25-1.38-.83-.74-1.39-1.65-1.55-1.93-.16-.28-.02-.43.12-.57.13-.13.28-.32.42-.48.14-.16.18-.28.28-.46.09-.18.05-.37-.02-.51-.07-.14-.62-1.5-.85-2.05-.23-.55-.46-.48-.62-.48-.16 0-.35-.02-.53-.02-.18 0-.46.07-.7.35-.23.28-.88 1.02-1.08 2.48-.2 1.46.9 2.88 1.03 3.07.14.18 1.78 2.73 4.3 3.83.6.25 1.07.4 1.44.5.6.16 1.15.14 1.58.09.48-.07 1.65-.68 1.88-1.33.23-.65.23-1.2.16-1.33z"/></svg><span>WhatsApp</span></button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="w-full p-4 text-center text-teal-800 text-xs">
+        <details class="mb-2 max-w-2xl mx-auto">
+            <summary class="cursor-pointer font-semibold text-blue-600 hover:underline focus:outline-none" data-translate-key="privacyTitle">
+                Informativa sulla Privacy
+            </summary>
+            <p class="mt-2 text-left md:text-center text-teal-700 p-2 bg-teal-100/50 rounded-lg" data-translate-key="privacyText">
+                Questa applicazione è progettata per rispettare la tua privacy. Non vengono raccolti, memorizzati o condivisi dati sensibili o personali. Le immagini caricate vengono elaborate in tempo reale e non vengono salvate sui nostri server.
+            </p>
+        </details>
+        <details class="mb-2 max-w-2xl mx-auto">
+            <summary class="cursor-pointer font-semibold text-red-600 hover:underline focus:outline-none" data-translate-key="disclaimerTitle">
+                Disclaimer e Raccomandazioni
+            </summary>
+            <p class="mt-2 text-left md:text-center text-red-700 p-2 bg-red-50 rounded-lg" data-translate-key="disclaimerText">
+                Le informazioni fornite da questa applicazione sono generate da un'intelligenza artificiale e sono da intendersi solo a scopo informativo e di intrattenimento. Lo sviluppatore non garantisce la precisione, l'affidabilità o la completezza delle informazioni. L'utente si assume la piena responsabilità per qualsiasi uso delle informazioni fornite. Si raccomanda di verificare sempre le informazioni da fonti attendibili. Lo sviluppatore non è responsabile per eventuali danni derivanti dall'uso di questa applicazione. Per qualsiasi domanda o segnalazione, è possibile contattare lo sviluppatore all'indirizzo: luminaessenza1@gmail.com.
+            </p>
+        </details>
+        <details class="mb-2 max-w-2xl mx-auto">
+            <summary class="cursor-pointer font-semibold text-green-600 hover:underline focus:outline-none" data-translate-key="supportTitle">
+                Sostieni il Progetto
+            </summary>
+            <div class="mt-2 text-left md:text-center text-gray-700 p-4 bg-green-50 rounded-lg">
+                <p class="mb-4" data-translate-key="supportText">
+                    Se trovi utile questa applicazione, considera di sostenere il suo mantenimento e i futuri sviluppi con una piccola donazione. Ogni contributo è molto apprezzato!
+                </p>
+                <a href="https://buy.stripe.com/9B600l1OhdNGe3C2X8djO09" target="_blank" rel="noopener noreferrer" class="inline-block bg-green-500 text-white font-bold py-2 px-6 rounded-lg hover:bg-green-600 focus:outline-none focus:ring-4 focus:ring-green-300 transition-all duration-200" data-translate-key="supportButton">
+                    Fai una Donazione
+                </a>
+            </div>
+        </details>
+        <p class="mt-4">© 2025 Nicola Nicolaci. Tutti i diritti riservati.</p>
+    </footer>
+
+    <script>
+        // --- ELEMENTI DEL DOM ---
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('fileInput');
+        const uploadPrompt = document.getElementById('uploadPrompt');
+        const imagePreviewContainer = document.getElementById('imagePreviewContainer');
+        const imagePreview = document.getElementById('imagePreview');
+        const removeImageBtn = document.getElementById('removeImageBtn');
+        const analyzeButton = document.getElementById('analyzeButton');
+        const resetButton = document.getElementById('resetButton');
+        const resultContainer = document.getElementById('resultContainer');
+        const loader = document.getElementById('loader');
+        const resultText = document.getElementById('resultText');
+        const toneSelect = document.getElementById('toneSelect');
+        const questionInput = document.getElementById('questionInput');
+        const socialShareContainer = document.getElementById('socialShareContainer');
+        const langItBtn = document.getElementById('lang-it');
+        const langEnBtn = document.getElementById('lang-en');
+
+        let fileData = null;
+
+        // --- DIZIONARIO TRADUZIONI ---
+        const translations = {
+            it: {
+                mainTitle: "E tu, lo sapevi?", subtitle: "Questa applicazione analizza qualsiasi oggetto in un'immagine e ti fornisce dettagli e curiosità.", uploadClick: "Clicca per caricare", uploadDrag: "o trascina un'immagine", uploadFormats: "PNG, JPG, GIF fino a 10MB", personalizeTitle: "Personalizza Analisi (Opzionale)", toneLabel: "Scegli un tono:", toneNormal: "Normale", toneTechnical: "Tecnico", toneFunny: "Divertente", toneHistorical: "Storico", questionLabel: "Fai una domanda specifica:", questionPlaceholder: "Es: Di che materiale è fatto?", analyzeButton: "Analizza Oggetto", resetButton: "Analizza un Altro Oggetto", shareTitle: "Condividi il risultato:", privacyTitle: "Informativa sulla Privacy", privacyText: "Questa applicazione è progettata per rispettare la tua privacy. Non vengono raccolti, memorizzati o condivisi dati sensibili o personali. Le immagini caricate vengono elaborate in tempo reale e non vengono salvate sui nostri server.", disclaimerTitle: "Disclaimer e Raccomandazioni", disclaimerText: "Le informazioni fornite da questa applicazione sono generate da un'intelligenza artificiale e sono da intendersi solo a scopo informativo e di intrattenimento. Lo sviluppatore non garantisce la precisione, l'affidabilità o la completezza delle informazioni. L'utente si assume la piena responsabilità per qualsiasi uso delle informazioni fornite. Si raccomanda di verificare sempre le informazioni da fonti attendibili. Lo sviluppatore non è responsabile per eventuali danni derivanti dall'uso di questa applicazione. Per qualsiasi domanda o segnalazione, è possibile contattare lo sviluppatore all'indirizzo: luminaessenza1@gmail.com.", supportTitle: "Sostieni il Progetto", supportText: "Se trovi utile questa applicazione, considera di sostenere il suo mantenimento e i futuri sviluppi con una piccola donazione. Ogni contributo è molto apprezzato!", supportButton: "Fai una Donazione", uploadMessage: "Immagine caricata. Clicca su 'Analizza Oggetto' per iniziare.", shareMessage: "Ho usato questa fantastica app per analizzare un'immagine! Provala anche tu:", errorGeneric: "Si è verificato un errore nell'analisi. Riprova.", errorIndeterminate: "Impossibile analizzare l'oggetto. Per favore, riprova con un'altra immagine.", errorConnection: "Impossibile connettersi al servizio di analisi. Controlla la tua connessione e riprova.", errorLoad: "Per favore, carica prima un'immagine."
+            },
+            en: {
+                mainTitle: "Did You Know?", subtitle: "This application analyzes any object in an image and provides you with details and fun facts.", uploadClick: "Click to upload", uploadDrag: "or drag and drop an image", uploadFormats: "PNG, JPG, GIF up to 10MB", personalizeTitle: "Customize Analysis (Optional)", toneLabel: "Choose a tone:", toneNormal: "Normal", toneTechnical: "Technical", toneFunny: "Funny", toneHistorical: "Historical", questionLabel: "Ask a specific question:", questionPlaceholder: "E.g., What is it made of?", analyzeButton: "Analyze Object", resetButton: "Analyze Another Object", shareTitle: "Share the result:", privacyTitle: "Privacy Policy", privacyText: "This application is designed to respect your privacy. No sensitive or personal data is collected, stored, or shared. Uploaded images are processed in real-time and are not saved on our servers.", disclaimerTitle: "Disclaimer and Recommendations", disclaimerText: "The information provided by this application is generated by an artificial intelligence and is intended for informational and entertainment purposes only. The developer does not guarantee the accuracy, reliability, or completeness of the information. The user assumes full responsibility for any use of the information provided. It is recommended to always verify information from reliable sources. The developer is not responsible for any damages arising from the use of this application. For any questions or reports, you can contact the developer at: luminaessenza1@gmail.com.", supportTitle: "Support the Project", supportText: "If you find this application useful, please consider supporting its maintenance and future developments with a small donation. Every contribution is greatly appreciated!", supportButton: "Make a Donation", uploadMessage: "Image loaded. Click 'Analyze Object' to begin.", shareMessage: "I used this amazing app to analyze an image! You should try it too:", errorGeneric: "An error occurred during the analysis. Please try again.", errorIndeterminate: "Could not analyze the object. Please try another image.", errorConnection: "Could not connect to the analysis service. Check your connection and try again.", errorLoad: "Please upload an image first."
+            }
+        };
+
+        let currentLang = 'it';
+
+        // --- FUNZIONI PRINCIPALI ---
+
+        function setLanguage(lang) {
+            currentLang = lang;
+            document.documentElement.lang = lang;
+
+            document.querySelectorAll('[data-translate-key]').forEach(el => {
+                const key = el.getAttribute('data-translate-key');
+                const translation = translations[lang][key];
+                if (translation) {
+                    if (el.hasAttribute('placeholder')) {
+                        el.placeholder = translation;
+                    } else {
+                        el.textContent = translation;
+                    }
+                }
+            });
+
+            // Aggiorna stile bottoni lingua
+            if (lang === 'it') {
+                langItBtn.classList.add('active');
+                langEnBtn.classList.remove('active');
+            } else {
+                langEnBtn.classList.add('active');
+                langItBtn.classList.remove('active');
+            }
+        }
+
+        function handleFiles(files) {
+            const file = files[0];
+            if (file && file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    fileData = e.target.result;
+                    imagePreview.src = fileData;
+                    uploadPrompt.classList.add('hidden');
+                    imagePreviewContainer.classList.remove('hidden');
+                    analyzeButton.disabled = false;
+                    resultText.textContent = translations[currentLang].uploadMessage;
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function resetInterface() {
+            fileData = null;
+            fileInput.value = '';
+            imagePreview.src = '#';
+            uploadPrompt.classList.remove('hidden');
+            imagePreviewContainer.classList.add('hidden');
+            analyzeButton.disabled = true;
+            resultText.textContent = '';
+            loader.classList.add('hidden');
+            questionInput.value = '';
+            toneSelect.selectedIndex = 0;
+            socialShareContainer.classList.add('hidden');
+        }
+
+        async function analyzeImage() {
+            if (!fileData) {
+                resultText.textContent = translations[currentLang].errorLoad;
+                return;
+            }
+
+            loader.classList.remove('hidden');
+            resultText.textContent = '';
+            analyzeButton.disabled = true;
+            socialShareContainer.classList.add('hidden');
+
+            const base64ImageData = fileData.split(',')[1];
+            const mimeType = fileData.split(';')[0].split(':')[1];
+            const tone = toneSelect.options[toneSelect.selectedIndex].textContent; // Invia il testo tradotto
+            const question = questionInput.value.trim();
+
+            const apiUrl = window.location.origin + '/.netlify/functions/analyze';
+
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ base64ImageData, mimeType, tone, question, lang: currentLang })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Errore dal server: ${response.statusText}`);
+                }
+
+                const result = await response.json();
+                
+                let analysisText = translations[currentLang].errorGeneric;
+                if (result.candidates && result.candidates.length > 0 &&
+                    result.candidates[0].content && result.candidates[0].content.parts &&
+                    result.candidates[0].content.parts.length > 0) {
+                    
+                    const textFromResult = result.candidates[0].content.parts[0].text;
+
+                    if (textFromResult.trim().toUpperCase() === 'INDETERMINATO') {
+                        analysisText = translations[currentLang].errorIndeterminate;
+                    } else {
+                        analysisText = textFromResult;
+                        socialShareContainer.classList.remove('hidden');
+                    }
+                }
+                resultText.textContent = analysisText;
+
+            } catch (error) {
+                console.error('Errore durante la chiamata alla funzione Netlify:', error);
+                resultText.textContent = translations[currentLang].errorConnection;
+            } finally {
+                loader.classList.add('hidden');
+                analyzeButton.classList.add('hidden');
+                resetButton.classList.remove('hidden');
+            }
+        }
+        
+        // --- GESTIONE EVENTI ---
+        dropZone.addEventListener('click', () => fileInput.click());
+        fileInput.addEventListener('change', (e) => handleFiles(e.target.files));
+        dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+        dropZone.addEventListener('dragleave', (e) => { e.preventDefault(); dropZone.classList.remove('drag-over'); });
+        dropZone.addEventListener('drop', (e) => { e.preventDefault(); dropZone.classList.remove('drag-over'); handleFiles(e.dataTransfer.files); });
+        removeImageBtn.addEventListener('click', (e) => { e.stopPropagation(); resetInterface(); });
+        analyzeButton.addEventListener('click', analyzeImage);
+        resetButton.addEventListener('click', () => { resetInterface(); resetButton.classList.add('hidden'); analyzeButton.classList.remove('hidden'); });
+        langItBtn.addEventListener('click', () => setLanguage('it'));
+        langEnBtn.addEventListener('click', () => setLanguage('en'));
+
+
+        // --- INIZIALIZZAZIONE ---
+        analyzeButton.disabled = true;
+        setLanguage('it'); // Imposta la lingua predefinita all'avvio
+
+        // --- LOGICA CONDIVISIONE SOCIAL ---
+        const shareFacebook = document.getElementById('shareFacebook');
+        const shareTwitter = document.getElementById('shareTwitter');
+        const shareWhatsapp = document.getElementById('shareWhatsapp');
+        const pageUrl = window.location.href;
+
+        function getShareText() {
+            let analysis = resultText.textContent;
+            if (analysis.length > 200) {
+                analysis = analysis.substring(0, 200) + '...';
+            }
+            return `"${analysis}"\n\n${translations[currentLang].shareMessage}`;
+        }
+
+        shareFacebook.addEventListener('click', () => {
+            const text = getShareText();
+            const url = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(pageUrl)}&quote=${encodeURIComponent(text)}`;
+            window.open(url, '_blank', 'width=600,height=400');
+        });
+
+        shareTwitter.addEventListener('click', () => {
+            const text = getShareText();
+            const url = `https://twitter.com/intent/tweet?url=${encodeURIComponent(pageUrl)}&text=${encodeURIComponent(text)}`;
+            window.open(url, '_blank', 'width=600,height=400');
+        });
+
+        shareWhatsapp.addEventListener('click', () => {
+            const text = getShareText();
+            const url = `https://api.whatsapp.com/send?text=${encodeURIComponent(text + ' ' + pageUrl)}`;
+            window.open(url, '_blank', 'width=800,height=600');
+        });
+    </script>
+</body>
+</html>
