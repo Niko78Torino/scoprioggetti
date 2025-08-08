@@ -3,8 +3,12 @@
 [build]
   # Specifica la cartella che contiene le funzioni serverless.
   functions = "netlify/functions/"
+  
+  [build.environment]
+    # Imposta una versione di Node.js stabile (LTS) per l'intero ambiente di build.
+    # Questo risolve l'errore di build causato da una versione non valida.
+    NODE_VERSION = "18"
 
 [functions]
-  # Imposta il runtime per le funzioni.
-  # Assicurati che la versione sia compatibile con le tue dipendenze.
+  # Imposta anche il runtime per le funzioni per coerenza.
   node_version = "18"
